@@ -13,3 +13,5 @@ mongoose
   .catch(() => console.log("Connexion à MongoDB échouée !"));
 
 app.use(express.json());
+
+module.exports = app;
