@@ -1,0 +1,24 @@
+{
+  "name": "maiphuongthao_6_16072022",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Maiphuongthao/MAIPhuongThao_6_16072022.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Maiphuongthao/MAIPhuongThao_6_16072022/issues"
+  },
+  "homepage": "https://github.com/Maiphuongthao/MAIPhuongThao_6_16072022#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1"
+  }
+}
