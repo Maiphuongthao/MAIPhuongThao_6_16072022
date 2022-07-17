@@ -4,11 +4,12 @@ require('dotenv').config();
 
 const app = express();
 
-require("./config/db.config");
-
 const corsOptions = {
     origin: 'http://localhost:4200/'
-} 
+};
+
+
+
 
 app.use(cors(corsOptions));
 app.use(express.json());
