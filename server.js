@@ -1,9 +1,11 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
-require("./config/db.config");
+require("./app/config/db.config");
+
 
 const app = express();
+
 
 const corsOptions = {
     origin: 'http://localhost:4200/'
@@ -23,3 +25,4 @@ const PORT= process.env.PORT || 3000;
 app.listen(PORT,()=>{
     console.log(`Server is running on port ${PORT}.`);
 })
+
