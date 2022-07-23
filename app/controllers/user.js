@@ -10,7 +10,7 @@ require("dotenv").config();
 exports.signup = (req, res, next) => {
   //Encrypt email before sending it to database
   const emailCryptoJs = cryptojs
-    .HmacSHA256(req.body.email, process.env.CLE_SECRETE)
+    .HmacSHA256(req.body.email, `${process.env.CLE_SECRETE}`)
     .toString();
   bcrypt
     //call function hash by bcrypt to password with a salt 10 times to make it safer
@@ -50,7 +50,7 @@ exports.login = (req, res, next) => {
               //userId entant playload
               { userId: user._id },
               //random token dispo pendant 24h
-              process.env.RANDOM_TOKEN_SECRET,
+              `${process.env.RANDOM_TOKEN_SECRET}`,
               { expiresIn: "24h" }
             ),
           });
