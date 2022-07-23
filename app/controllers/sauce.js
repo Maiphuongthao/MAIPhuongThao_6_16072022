@@ -18,7 +18,7 @@ exports.getOneSauce = (req, res, next) => {
 
   // get all sauces
   exports.getAllSauces = (req, res, next) => {
-    Thing.find()
+    Sauce.find()
       .then((sauces) => {
         res.status(200).json(sauces);
       })

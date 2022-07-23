@@ -16,12 +16,11 @@ module.exports = (req, res, next) => {
     };
 
     if (req.body.userId !== userId) {
-      res.status(403).send({ message: "Invalide token" + err });
+      res.status(403).json({ message: "Invalide token" + err });
     } else {
       next();
     }
   } catch (error) {
-    res.status(403).json({ error });
+    res.status(403).json({ error: "unauthorized request" });
   }
 };
-
