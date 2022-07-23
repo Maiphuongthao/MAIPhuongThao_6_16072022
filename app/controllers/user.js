@@ -21,7 +21,7 @@ exports.signup = (req, res, next) => {
   //Encrypt email before sending it to database
   bcrypt
     //call function hash by bcrypt to password with a salt 10 times to make it safer
-    //create an user and save it in database, send message if it's created and error if not
+    //create a new user and save it in database with encrypted email, send message if it's created and error if not
     .hash(req.body.password, 10)
     .then((hash) => {
       const user = new User({
@@ -40,11 +40,16 @@ exports.signup = (req, res, next) => {
 };
 
 exports.login = (req, res, next) => {
-  User.findOne({ email: req.body.email })
+    //Showing encrypted email and check with user given email
+  const encryptedEmail = encrypt(req.body.email);
+  User.findOne({ encryptedEmail })
     .then((user) => {
       if (!user) {
         return res.status(401).json({ error: "User not found !" });
       }
+
+      //decrypte email from encrypted to compare with given email by user
+      user.email = decrypt(user.email);
       bcrypt
         .compare(req.body.password, user.password)
         .then((valid) => {
@@ -63,6 +68,8 @@ exports.login = (req, res, next) => {
               `${process.env.JWT_TOKEN}`,
               { expiresIn: "24h" }
             ),
+            //return user as correct user
+            user: user,
           });
         })
         .catch((error) => res.status(500).json({ error }));
