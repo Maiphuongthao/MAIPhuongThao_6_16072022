@@ -40,7 +40,7 @@ exports.signup = (req, res, next) => {
 };
 
 exports.login = (req, res, next) => {
-    //Showing encrypted email and check with user given email
+  //Showing encrypted email and check with user given email
   const encryptedEmail = encrypt(req.body.email);
   User.findOne({ encryptedEmail })
     .then((user) => {
@@ -65,7 +65,7 @@ exports.login = (req, res, next) => {
               //userId entant playload
               { userId: user._id },
               //random token dispo pendant 24h
-              `${process.env.JWT_TOKEN}`,
+              process.env.JWT_TOKEN,
               { expiresIn: "24h" }
             ),
             //return user as correct user
