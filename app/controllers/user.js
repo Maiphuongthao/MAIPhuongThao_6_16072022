@@ -1,10 +1,10 @@
 const bcrypt = require("bcrypt");
-
+const jwt = require("jsonwebtoken");
+const User = require("../models/user");
 //import cryptojs for encrypt email
 const cryptojs = require("crypto-js");
-const jwt = require("jsonwebtoken");
 
-const User = require("../models/user");
+
 require("dotenv").config();
 
 function encrypt(value) {
@@ -49,7 +49,7 @@ exports.login = (req, res, next) => {
       }
 
       //decrypte email from encrypted to compare with given email by user
-      user.email = decrypt(user.email);
+      user.email = decrypt(user.email)
       bcrypt
         .compare(req.body.password, user.password)
         .then((valid) => {
