@@ -144,37 +144,61 @@ exports.likeAndDislike = (req, res, next) => {
 //update Sauce
 exports.modifySauce = (req, res, next) => {
   //get sauce id
-  Sauce.findOne({_id: req.params.id}).then((sauce) => {
-    
-    if (sauce.userId !== req.auth.userId) {
-      return res.status(403).json({ message: " Unauthorized request" });
-    } else {
-      //Check the image file
-      const sauceObject = req.file ? {
-            //Using ternary condition SauceObject captured then transfor sauce to character in req.body.saue and add new image with the database of file
-            ...JSON.parse(req.body.sauce),
-            imageUrl: `${req.protocol}://${req.get("host")}//images/${
-              req.file.filename
-            }`
-          }
-        : { ...req.body };
+  Sauce.findOne({ _id: req.params.id })
+    .then((sauce) => {
+      if (!sauce) {
+        res.status(404).json({error: 'Sauce doesnt existe'});
+      }
+      if (sauce.userId !== req.auth.userId) {
+        return res.status(403).json({ message: " Unauthorized request" });
+      } else {
+        //Check the image file
+        const sauceObject = req.file
+          ? {
+              //Using ternary condition SauceObject captured then transfor sauce to character in req.body.saue and add new image with the database of file
+              ...JSON.parse(req.body.sauce),
+              imageUrl: `${req.protocol}://${req.get("host")}//images/${
+                req.file.filename
+              }`,
+            }
+          : { ...req.body };
 
-      //updateSauce
-      Sauce.updateOne(
-        { _id: req.params.id },
-        { ...sauceObject, _id: req.params.id }
-      )
-        .then((updatedSauce) => {
-          res.status(200).json({
-            message: "Sauce updated successfully!",
-            updatedSauce,
+        //updateSauce
+        Sauce.updateOne(
+          { _id: req.params.id },
+          { ...sauceObject, _id: req.params.id }
+        )
+          .then((updatedSauce) => {
+            res.status(200).json({
+              message: "Sauce updated successfully!",
+              updatedSauce,
+            });
+          })
+          .catch((error) => {
+            res.status(400).json({
+              error: error,
+            });
           });
-        })
-        .catch((error) => {
-          res.status(400).json({
-            error: error,
-          });
-        });
-    }
-  });
+      }
+    })
+    .catch((error) => {
+      res.status(400).json({
+        error: error,
+      });
+    });
+};
+
+//delete Sauce
+exports.deleteSauce = (req, res, next) => {
+  Sauce.deleteOne({ _id: req.params.id })
+    .then((sauce) => {
+      res.status(200).json({
+        message: "Sauce deleted!", sauce
+      });
+    })
+    .catch((error) => {
+      res.status(400).json({
+        error: error,
+      });
+    });
 };
