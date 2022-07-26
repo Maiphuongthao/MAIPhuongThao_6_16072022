@@ -80,7 +80,7 @@ exports.likeAndDislike = (req, res, next) => {
         Sauce.updateOne(
           { _id: req.params.id },
           {
-            $inc: { likes: 1},
+            $inc: { likes: 1 },
             $push: { usersLiked: req.body.userId },
             $pull: { usersDisliked: req.body.userId },
           }
@@ -100,7 +100,7 @@ exports.likeAndDislike = (req, res, next) => {
         Sauce.updateOne(
           { _id: req.params.id },
           {
-            $inc: { dislikes: 1},
+            $inc: { dislikes: 1 },
             $push: { usersDisliked: req.body.userId },
             $pull: { usersLiked: req.body.userId },
           }
@@ -137,6 +137,44 @@ exports.likeAndDislike = (req, res, next) => {
       }
     } else {
       return res.status(403).json({ message: "Invalide like option" });
+    }
+  });
+};
+
+//update Sauce
+exports.modifySauce = (req, res, next) => {
+  //get sauce id
+  Sauce.findOne({_id: req.params.id}).then((sauce) => {
+    
+    if (sauce.userId !== req.auth.userId) {
+      return res.status(403).json({ message: " Unauthorized request" });
+    } else {
+      //Check the image file
+      const sauceObject = req.file ? {
+            //Using ternary condition SauceObject captured then transfor sauce to character in req.body.saue and add new image with the database of file
+            ...JSON.parse(req.body.sauce),
+            imageUrl: `${req.protocol}://${req.get("host")}//images/${
+              req.file.filename
+            }`
+          }
+        : { ...req.body };
+
+      //updateSauce
+      Sauce.updateOne(
+        { _id: req.params.id },
+        { ...sauceObject, _id: req.params.id }
+      )
+        .then((updatedSauce) => {
+          res.status(200).json({
+            message: "Sauce updated successfully!",
+            updatedSauce,
+          });
+        })
+        .catch((error) => {
+          res.status(400).json({
+            error: error,
+          });
+        });
     }
   });
 };
