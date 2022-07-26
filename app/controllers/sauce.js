@@ -143,48 +143,37 @@ exports.likeAndDislike = (req, res, next) => {
 
 //update Sauce
 exports.modifySauce = (req, res, next) => {
+  
+  //Check if image file existe or not, if yes create sauceObject with new img, if not only other info
+  const sauceObject = req.file
+    ? {
+        ...JSON.parse(req.body.sauce),
+        imageUrl: `${req.protocol}://${req.get("host")}/images/${
+          req.file.filename
+        }`,
+      }
+    : { ...req.body };
+
+  delete sauceObject._userId;//delete object userId for security
+  
   //get sauce id
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
-      if (!sauce) {
-        res.status(404).json({error: 'Sauce doesnt existe'});
-      }
-      if (sauce.userId !== req.auth.userId) {
-        return res.status(403).json({ message: " Unauthorized request" });
+      if (sauce.userId != req.auth.userId) {
+        res.status(401).json({ message: "Unauthorized request" });
       } else {
-        //Check the image file
-        const sauceObject = req.file
-          ? {
-              //Using ternary condition SauceObject captured then transfor sauce to character in req.body.saue and add new image with the database of file
-              ...JSON.parse(req.body.sauce),
-              imageUrl: `${req.protocol}://${req.get("host")}//images/${
-                req.file.filename
-              }`,
-            }
-          : { ...req.body };
-
-        //updateSauce
         Sauce.updateOne(
           { _id: req.params.id },
           { ...sauceObject, _id: req.params.id }
         )
-          .then((updatedSauce) => {
-            res.status(200).json({
-              message: "Sauce updated successfully!",
-              updatedSauce,
-            });
-          })
-          .catch((error) => {
-            res.status(400).json({
-              error: error,
-            });
-          });
+          .then((updatedSauce) =>
+            res.status(200).json({ message: "Objet modifié!", updatedSauce })
+          )
+          .catch((error) => res.status(401).json({ error }));
       }
     })
     .catch((error) => {
-      res.status(400).json({
-        error: error,
-      });
+      res.status(400).json({ error });
     });
 };
 
@@ -193,7 +182,8 @@ exports.deleteSauce = (req, res, next) => {
   Sauce.deleteOne({ _id: req.params.id })
     .then((sauce) => {
       res.status(200).json({
-        message: "Sauce deleted!", sauce
+        message: "Sauce deleted!",
+        sauce,
       });
     })
     .catch((error) => {
