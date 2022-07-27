@@ -5,7 +5,7 @@ require("./app/config/db.config");
 const app = express();
 const router = require("./app/routes/index");
 //require path module to interact with file systems
-const path = require('path');
+const path = require("path");
 
 //add headers to avoid blocking from corps between 3000 & 4200
 app.use((req, res, next) => {
@@ -22,7 +22,7 @@ app.use((req, res, next) => {
 });
 
 const corsOptions = {
-  origin: "http://localhost:4200"
+  origin: "http://localhost:4200",
 };
 
 app.use(cors(corsOptions));
@@ -31,7 +31,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use("/api", router);
 //Mangae images as static eachtime its runnign after /images
-app.use('/images', express.static(path.join(__dirname, 'images')));
+app.use("/images", express.static(path.join(__dirname, "images")));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
