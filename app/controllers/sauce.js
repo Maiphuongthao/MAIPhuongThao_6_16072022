@@ -1,6 +1,7 @@
 const { json } = require("express");
 const sauce = require("../models/sauce");
 const Sauce = require("../models/sauce");
+const fs = require('fs');
 
 //Search if of sauce é get one sauce
 exports.getOneSauce = (req, res, next) => {
@@ -160,7 +161,7 @@ exports.modifySauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       if (sauce.userId != req.auth.userId) {
-        res.status(401).json({ message: "Unauthorized request" });
+        res.status(403).json({ message: "Unauthorized request" });
       } else {
         Sauce.updateOne(
           { _id: req.params.id },
@@ -178,17 +179,22 @@ exports.modifySauce = (req, res, next) => {
 };
 
 //delete Sauce
+//Check userId of the sauce if it's correct then appel the img url that we know it's from images file, delete the image with unlink from fs, 
 exports.deleteSauce = (req, res, next) => {
-  Sauce.deleteOne({ _id: req.params.id })
-    .then((sauce) => {
-      res.status(200).json({
-        message: "Sauce deleted!",
-        sauce,
+  Sauce.findOne({ _id: req.params.id})
+      .then(sauce => {
+          if (sauce.userId != req.auth.userId) {
+              res.status(403).json({message: 'Unthorized request'});
+          } else {
+              const filename = sauce.imageUrl.split('/images/')[1];
+              fs.unlink(`images/${filename}`, () => {
+                  Sauce.deleteOne({_id: req.params.id})
+                      .then(() => { res.status(200).json({message: 'Sauce is deleted !'})})
+                      .catch(error => res.status(400).json({ error }));
+              });
+          }
+      })
+      .catch( error => {
+          res.status(500).json({ error });
       });
-    })
-    .catch((error) => {
-      res.status(400).json({
-        error: error,
-      });
-    });
 };
