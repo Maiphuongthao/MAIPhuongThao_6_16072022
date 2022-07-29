@@ -32,7 +32,6 @@ exports.getAllSauces = (req, res, next) => {
 exports.createSauce = (req, res, next) => {
   //parse objet to string
   const sauceObject = JSON.parse(req.body.sauce);
-  console.log(sauceObject);
   //delete the id as it'll be generate automatique
   delete sauceObject._id;
   //delete userId who create sauce as it is'nt reliable. Use only userId which comes from token
