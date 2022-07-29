@@ -57,7 +57,7 @@ exports.signup = (req, res, next) => {
 exports.login = (req, res, next) => {
   //Showing encrypted email and check with user given email
   const encryptedEmail = encrypt(req.body.email);
-  User.findOne({ encryptedEmail })
+  User.findOne({email: encryptedEmail })
     .then((user) => {
       if (!user) {
         return res.status(401).json({ error: "User not found !" });
