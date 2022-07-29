@@ -1,5 +1,4 @@
 const { json } = require("express");
-const sauce = require("../models/sauce");
 const Sauce = require("../models/sauce");
 const fs = require("fs");
 
@@ -7,6 +6,7 @@ const fs = require("fs");
 exports.getOneSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
+      sauce.imageUrl = `${req.protocol}://${req.get("host")}${sauce.imageUrl}`;
       res.status(200).json(sauce);
     })
     .catch((error) => {
@@ -20,6 +20,11 @@ exports.getOneSauce = (req, res, next) => {
 exports.getAllSauces = (req, res, next) => {
   Sauce.find()
     .then((sauces) => {
+      sauces = sauces.map((sauce) => {
+        sauce.imageUrl = `${req.protocol}://${req.get("host")}${
+          sauce.imageUrl
+        }`;
+      });
       res.status(200).json(sauces);
     })
     .catch((error) => {
@@ -40,13 +45,7 @@ exports.createSauce = (req, res, next) => {
   const sauce = new Sauce({
     ...sauceObject,
     userId: req.auth.userId,
-    imageUrl: `${req.protocol}://${req.get("host")}/images/${
-      req.file.filename
-    }`,
-    likes: 0,
-    dislikes: 0,
-    usersLiked: [],
-    usersDisliked: [],
+    imageUrl: `/images/${req.file.filename}`,
   });
 
   sauce
@@ -162,7 +161,7 @@ exports.modifySauce = (req, res, next) => {
         res.status(403).json({ message: "Unauthorized request" });
       } else {
         Sauce.updateOne(
-          { _id: req.params.id },
+          //{ _id: req.params.id },
           { ...sauceObject, _id: req.params.id }
         )
           .then((updatedSauce) =>
@@ -188,7 +187,7 @@ exports.deleteSauce = (req, res, next) => {
         fs.unlink(`images/${filename}`, () => {
           Sauce.deleteOne({ _id: req.params.id })
             .then(() => {
-              res.status(200).json({ message: "Sauce is deleted !" });
+              res.status(204).send();
             })
             .catch((error) => res.status(400).json({ error }));
         });
