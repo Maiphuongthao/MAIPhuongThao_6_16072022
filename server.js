@@ -1,10 +1,11 @@
 const express = require("express");
-//add helmet to help secure express
-const helmet = require("helmet");
 const cors = require("cors");
+const mongoSanitize = require('express-mongo-sanitize');
 require("dotenv").config();
 require("./app/config/db.config");
 const app = express();
+//add helmet to help secure express modules
+const helmet = require("helmet");
 const router = require("./app/routes/index");
 //require path module to interact with file systems
 const path = require("path");
@@ -39,6 +40,9 @@ app.use("/api", router);
 //Mangae images as static eachtime its runnign after /images
 app.use("/images", express.static(path.join(__dirname, "images")));
 
+
+// To remove data using these defaults:
+app.use(mongoSanitize());
 
 //Add slowdown speed limiter to slowdown the responses
 const speedLimiter = slowDown({

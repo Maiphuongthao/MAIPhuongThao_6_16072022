@@ -24,7 +24,7 @@ exports.getAllSauces = (req, res, next) => {
         sauce.imageUrl = `${req.protocol}://${req.get("host")}${
           sauce.imageUrl
         }`;
-        return { ...sauce.toObject() };
+        return { ...sauce.toObject() };// return to js object
       });
       res.status(200).json(sauces);
     })
