@@ -1,4 +1,6 @@
 const express = require("express");
+//add helmet to help secure express
+const helmet = require("helmet");
 const cors = require("cors");
 require("dotenv").config();
 require("./app/config/db.config");
@@ -8,6 +10,8 @@ const router = require("./app/routes/index");
 const path = require("path");
 
 const slowDown = require("express-slow-down");
+
+
 
 //add headers to avoid blocking from corps between 3000 & 4200
 app.use((req, res, next) => {
@@ -36,7 +40,7 @@ app.use("/api", router);
 app.use("/images", express.static(path.join(__dirname, "images")));
 
 
-//Add slowdown speed limiter
+//Add slowdown speed limiter to slowdown the responses
 const speedLimiter = slowDown({
   windowMs: 15 * 60 * 1000, // 15 minutes
   delayAfter: 100, // allow 100 requests per 15 minutes, then...
@@ -48,7 +52,7 @@ const speedLimiter = slowDown({
 });
 //  apply to all requests
 app.use(speedLimiter);
-
+app.use(helmet());
 
 
 const PORT = process.env.PORT || 3000;
