@@ -6,7 +6,8 @@ const app = express();
 const router = require("./app/routes/index");
 //require path module to interact with file systems
 const path = require("path");
-const rateLimit = require('express-rate-limit');
+
+const slowDown = require("express-slow-down");
 
 //add headers to avoid blocking from corps between 3000 & 4200
 app.use((req, res, next) => {
@@ -34,15 +35,7 @@ app.use("/api", router);
 //Mangae images as static eachtime its runnign after /images
 app.use("/images", express.static(path.join(__dirname, "images")));
 
-// add ratelimit to limit the repeated request 
-const limiter = rateLimit({
-	windowMs: 15 * 60 * 1000, // 15 minutes
-	max: 10, // Limit each IP to 10 requests per `window` (here, per 15 minutes)
-	standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-	legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-})
 
-app.use(limiter);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
