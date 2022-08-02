@@ -2,6 +2,11 @@ const mongoose = require(`mongoose`);
 const bunyan = require("bunyan");
 require("dotenv").config();
 
+
+
+if (!process.env.MONGO_URI) {
+  console.log("MONGO_URI not found on .env !");
+}
 //create logger to print error messages of system with bunyan
 //"serializer" functions to produce a JSON-able object from a JavaScript object
 function serializer(data) {
@@ -61,11 +66,11 @@ mongoose.set("debug", function (coll, method, query, doc, options) {
   });
 });
 
-if (!process.env.MONGO_URI) {
-  console.log("MONGO_URI not found on .env !");
-}
+
 mongoose
-  .connect(process.env.MONGO_URI)
+  .connect(process.env.MONGO_URI, {
+    ssl: true // force la securité entre basedonnée et le site// anglaise
+  })
   .then(() => {
     console.log("Connection to database established ");
   })

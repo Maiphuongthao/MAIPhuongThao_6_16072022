@@ -24,7 +24,7 @@ exports.getAllSauces = (req, res, next) => {
         sauce.imageUrl = `${req.protocol}://${req.get("host")}${
           sauce.imageUrl
         }`;
-        return { ...sauce.toObject() };// return to js object
+        return { ...sauce.toObject() }; // return to js object
       });
       res.status(200).json(sauces);
     })
@@ -68,30 +68,32 @@ exports.likeAndDislike = (req, res, next) => {
   //find sauce id
   Sauce.findOne({ _id: req.params.id })
     .then((sauceFound) => {
-      const userLikedSauce = sauceFound.usersLiked.includes(req.body.userId);
+      const userLikedSauce = sauceFound.usersLiked.includes(req.auth.userId);
       const userDislikedSauce = sauceFound.usersDisliked.includes(
-        req.body.userId
+        req.auth.userId
       );
+      let likeStatement = {};
       //Case like = 1/////////////////////////
       switch (req.body.like) {
         case 1:
+          likeStatement = {
+            $inc: { likes: 1 },
+            $push: { usersLiked: req.auth.userId },
+          };
           //if userId in usersLiked is true
           if (userDislikedSauce) {
             likeStatement = {
               $inc: { likes: 1, dislikes: -1 },
-              $push: { usersLiked: req.body.userId },
-              $pull: { usersDisliked: req.body.userId },
+              $push: { usersLiked: req.auth.userId },
+              $pull: { usersDisliked: req.auth.userId },
             };
-          } else if (!userLikedSauce) {
-            Sauce.updateOne(
-              { _id: req.params.id },
-              { $inc: { likes: 1 }, $push: { usersLiked: req.body.userId } },
-              {
-                new: true,
-              }
-            )
-              .then((updateSauce) =>
-                res.status(200).json({ message: "Like added", updateSauce })
+          }
+          if (!userLikedSauce) {
+            Sauce.findByIdAndUpdate({ _id: req.params.id }, likeStatement, {
+              new: true,
+            })
+              .then((sauceUpdated) =>
+                res.status(200).json({ message: "Like added", sauceUpdated })
               )
               .catch((error) => res.status(400).json({ error }));
           } else {
@@ -100,34 +102,13 @@ exports.likeAndDislike = (req, res, next) => {
           break;
         //Case like = 0
         case 0:
-          if (userLikedSauce) {
-            Sauce.updateOne(
-              { _id: req.params.id },
-              { $inc: { likes: -1 }, $pull: { usersLiked: req.body.userId } },
-              {
-                new: true,
-              }
-            )
-              .then((updateSauce) => res.status(200).json({ updateSauce }))
-              .catch((error) => res.status(400).json({ error }));
-          } else if (userDislikedSauce) {
-            Sauce.updateOne(
-              { _id: req.params.id },
-              {
-                $pull: { usersDisliked: req.body.userId },
-                $inc: { dislikes: -1 },
-              },
-              { new: true }
-            )
-              .then((updateSauce) => res.status(200).json({ updateSauce }))
-              .catch((error) => res.status(400).json({ error }));
-          } else if (userDislikedSauce && userLikedSauce) {
-            Sauce.updateOne(
+          if (userDislikedSauce && userLikedSauce) {
+            Sauce.findByIdAndUpdate(
               { _id: req.params.id },
               {
                 $pull: {
-                  usersDisliked: req.body.userId,
-                  usersLiked: req.body.userId,
+                  usersDisliked: req.auth.userId,
+                  usersLiked: req.auth.userId,
                 },
                 $inc: { dislikes: -1, like: -1 },
               },
@@ -135,30 +116,49 @@ exports.likeAndDislike = (req, res, next) => {
             )
               .then((updateSauce) => res.status(200).json({ updateSauce }))
               .catch((error) => res.status(400).json({ error }));
+          } else if (userLikedSauce) {
+            Sauce.findByIdAndUpdate(
+              { _id: req.params.id },
+              { $inc: { likes: -1 }, $pull: { usersLiked: req.auth.userId } },
+              {
+                new: true,
+              }
+            )
+              .then((updateSauce) => res.status(200).json({ updateSauce }))
+              .catch((error) => res.status(400).json({ error }));
+          } else if (userDislikedSauce) {
+            Sauce.findByIdAndUpdate(
+              { _id: req.params.id },
+              {
+                $pull: { usersDisliked: req.auth.userId },
+                $inc: { dislikes: -1 },
+              },
+              { new: true }
+            )
+              .then((updateSauce) => res.status(200).json({ updateSauce }))
+              .catch((error) => res.status(400).json({ error }));
           } else {
-            res.status(200).json({ message: " vote is reset" });
+            res.status(200).json({ message: " User never liked this sauce" });
           }
           break;
 
         //Case like = -1//////////////////
         case -1:
+          likeStatement = {
+            $inc: { dislikes: 1 },
+            $push: { usersDisliked: req.auth.userId },
+          };
           if (userLikedSauce) {
             likeStatement = {
               $inc: { likes: -1, dislikes: 1 },
-              $pull: { usersLiked: req.body.userId },
-              $push: { usersDisliked: req.body.userId },
+              $pull: { usersLiked: req.auth.userId },
+              $push: { usersDisliked: req.auth.userId },
             };
-          } else if (!userDislikedSauce) {
-            Sauce.updateOne(
-              { _id: req.params.id },
-              {
-                $inc: { dislikes: 1 },
-                $push: { usersDisliked: req.body.userId },
-              },
-              {
-                new: true,
-              }
-            )
+          }
+          if (!userDislikedSauce) {
+            Sauce.findByIdAndUpdate({ _id: req.params.id }, likeStatement, {
+              new: true,
+            })
               .then((updateSauce) => res.status(200).json({ updateSauce }))
               .catch((error) => res.status(400).json({ error }));
           } else {
@@ -166,8 +166,13 @@ exports.likeAndDislike = (req, res, next) => {
           }
 
           break;
+
+          default:
+            res.status(422).json({message: "Invalid value for like"});
       }
     })
+
+
     .catch((error) =>
       res.status(400).json({
         error,
