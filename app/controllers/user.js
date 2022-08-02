@@ -2,19 +2,34 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 //import cryptojs for encrypt email
-const cryptojs = require("crypto-js");
+const CryptoJS = require("crypto-js");
 
 
 require("dotenv").config();
 
 function encrypt(value) {
-  return cryptojs.AES.encrypt(value, process.env.CRYPTO_KEY).toString();
+  return CryptoJS.AES.encrypt(
+    value,
+    CryptoJS.enc.Base64.parse(process.env.CRYPTO_KEY),
+    {
+      iv: CryptoJS.enc.Base64.parse(process.env.CRYPTO_IV),
+      mode: CryptoJS.mode.ECB,
+      padding: CryptoJS.pad.Pkcs7,
+    }
+  ).toString();
 }
 
 function decrypt(value) {
-  return cryptojs.AES.decrypt(value, process.env.CRYPTO_KEY).toString(
-    cryptojs.enc.Utf8
+  var bytes = CryptoJS.AES.decrypt(
+    value,
+    CryptoJS.enc.Base64.parse(process.env.CRYPTO_KEY),
+    {
+      iv: CryptoJS.enc.Base64.parse(process.env.CRYPTO_IV),
+      mode: CryptoJS.mode.ECB,
+      padding: CryptoJS.pad.Pkcs7,
+    }
   );
+  return bytes.toString(CryptoJS.enc.Utf8);
 }
 
 exports.signup = (req, res, next) => {
@@ -42,7 +57,7 @@ exports.signup = (req, res, next) => {
 exports.login = (req, res, next) => {
   //Showing encrypted email and check with user given email
   const encryptedEmail = encrypt(req.body.email);
-  User.findOne({ encryptedEmail })
+  User.findOne({email: encryptedEmail })
     .then((user) => {
       if (!user) {
         return res.status(401).json({ error: "User not found !" });
@@ -76,3 +91,4 @@ exports.login = (req, res, next) => {
     })
     .catch((error) => res.status(500).json({ error }));
 };
+
