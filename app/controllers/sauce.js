@@ -3,7 +3,7 @@ const Sauce = require("../models/sauce");
 const fs = require("fs");
 
 //Search if of sauce é get one sauce
-exports.getOneSauce = (req, res, next) => {
+exports.readOneSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
       sauce.imageUrl = `${req.protocol}://${req.get("host")}${sauce.imageUrl}`;
@@ -17,7 +17,7 @@ exports.getOneSauce = (req, res, next) => {
 };
 
 // get all sauces
-exports.getAllSauces = (req, res, next) => {
+exports.readAllSauces = (req, res, next) => {
   Sauce.find()
     .then((sauces) => {
       sauces = sauces.map((sauce) => {
@@ -181,7 +181,7 @@ exports.likeAndDislike = (req, res, next) => {
 };
 
 //update Sauce
-exports.modifySauce = (req, res, next) => {
+exports.updateSauce = (req, res, next) => {
   //Check if image file existe or not, if yes create sauceObject with new img, if not only other info
   const sauceObject = req.file
     ? {
