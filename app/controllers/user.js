@@ -3,7 +3,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 //import cryptojs for encrypt email
 const CryptoJS = require("crypto-js");
-
+const { json } = require("express");
 
 require("dotenv").config();
 
@@ -57,14 +57,14 @@ exports.signup = (req, res, next) => {
 exports.login = (req, res, next) => {
   //Showing encrypted email and check with user given email
   const encryptedEmail = encrypt(req.body.email);
-  User.findOne({email: encryptedEmail })
+  User.findOne({ email: encryptedEmail })
     .then((user) => {
       if (!user) {
         return res.status(401).json({ error: "User not found !" });
       }
 
       //decrypte email from encrypted to compare with given email by user
-      user.email = decrypt(user.email)
+      user.email = decrypt(user.email);
       bcrypt
         .compare(req.body.password, user.password)
         .then((valid) => {
@@ -91,4 +91,63 @@ exports.login = (req, res, next) => {
     })
     .catch((error) => res.status(500).json({ error }));
 };
+
+// read user
+exports.readUser = (req, res, next) => {
+  // Check the user login if it's existe
+  User.findById(req.auth.userId)
+    .then((user) => {
+      if (!user) {
+        res.status(401).json({ message: "user not found" });
+      } else {
+        // decrypt the email to be returned
+        user.email = decrypt(user.email);
+        res.status(200).json({ user });
+      }
+    })
+    .catch((error) => res.status(500).json(error));
+};
+
+//export userData to txt file
+exports.readUser = (req, res, next) => {
+  // Check the user login if it's existe
+  User.findById(req.auth.userId)
+    .then((user) => {
+      if (!user) {
+        res.status(401).json({ message: "user not found" });
+      } else {
+        // decrypt the email to be returned
+        user.email = decrypt(user.email);
+        
+        res.status(200).json({ user });
+      }
+    })
+    .catch((error) => res.status(500).json(error));
+};
+
+//Modify user
+exports.updateUser = (req, res, next) => {
+  User.findById(req.auth.userId)
+  // check the email of user
+    .then((user) => {
+      if (!user) {
+        res.status(401).json({ message: "user not found" });
+      } else {
+        // update user data with new info, email need to be encrypted before adding to database
+        User.findByIdAndUpdate(
+          { _id: req.auth.userId },
+          { ...req.body, email: encrypt(req.auth.email) },
+          { new: true }
+        )
+        .then((updatedUser)=>{
+          //decrypt email to be returned
+          updatedUser.email = decrypt(updatedUser.email);
+          res.status(200).json({message: "User has been updated", updatedUser})
+        })
+        .catch((error)=>res.status(400).json(error))
+      }
+    })
+    .catch((error) => res.status(500).json(error));
+};
+
 

@@ -167,11 +167,10 @@ exports.likeAndDislike = (req, res, next) => {
 
           break;
 
-          default:
-            res.status(422).json({message: "Invalid value for like"});
+        default:
+          res.status(422).json({ message: "Invalid value for like" });
       }
     })
-
 
     .catch((error) =>
       res.status(400).json({
@@ -182,35 +181,38 @@ exports.likeAndDislike = (req, res, next) => {
 
 //update Sauce
 exports.updateSauce = (req, res, next) => {
-  //Check if image file existe or not, if yes create sauceObject with new img, if not only other info
-  const sauceObject = req.file
-    ? {
-        ...JSON.parse(req.body.sauce),
-        imageUrl: `/images/${req.file.filename}`,
-      }
-    : { ...req.body };
-
-  delete sauceObject._userId; //delete object userId for security
-
   //get sauce id
-  Sauce.findOne({ _id: req.params.id })
-    .then((sauce) => {
-      if (sauce.userId != req.auth.userId) {
-        res.status(403).json({ message: "Unauthorized request" });
-      } else {
-        Sauce.updateOne(
-          //{ _id: req.params.id },
-          { ...sauceObject, _id: req.params.id }
-        )
-          .then((updatedSauce) =>
-            res.status(200).json({ message: "Objet modifié!", updatedSauce })
-          )
-          .catch((error) => res.status(401).json({ error }));
+  Sauce.findOne({ _id: req.params.id }).then((sauce) => {
+    if (sauce.userId != req.auth.userId) {
+      console.log(status(400));
+      res.status(403).json({ error: new Error("Unauthorized request!") });
+    } else {
+      //Check if image file existe or not, if yes create sauceObject with new img, if not only other info
+      const sauceObject = req.file
+        ? {
+            ...JSON.parse(req.body.sauce),
+            imageUrl: `/images/${req.file.filename}`,
+          }
+        : { ...req.body };
+
+      const filename = sauce.imageUrl.split("/images/")[1];
+      try {
+        if (sauceObject.imageUrl) {
+          fs.unlink(`images/${filename}`);
+        }
+      } catch (error) {
+        console.error(error);
       }
-    })
-    .catch((error) => {
-      res.status(400).json({ error });
-    });
+      Sauce.findByIdAndUpdate(
+        //{ _id: req.params.id },
+        { ...sauceObject, _id: req.params.id }
+      )
+        .then((updatedSauce) => res.status(200).json(updatedSauce))
+        .catch((error) => {
+          res.status(400).json({ error });
+        });
+    }
+  });
 };
 
 //delete Sauce
@@ -225,7 +227,7 @@ exports.deleteSauce = (req, res, next) => {
         fs.unlink(`images/${filename}`, () => {
           Sauce.deleteOne({ _id: req.params.id })
             .then(() => {
-              res.status(204).send();
+              res.status(204).json({ message: "Sauce is deleted" });
             })
             .catch((error) => res.status(400).json({ error }));
         });
