@@ -109,7 +109,7 @@ exports.readUser = (req, res, next) => {
 };
 
 //export userData to txt file
-exports.readUser = (req, res, next) => {
+exports.exportData = (req, res, next) => {
   // Check the user login if it's existe
   User.findById(req.auth.userId)
     .then((user) => {
@@ -118,8 +118,8 @@ exports.readUser = (req, res, next) => {
       } else {
         // decrypt the email to be returned
         user.email = decrypt(user.email);
-        
-        res.status(200).json({ user });
+        res.attachment("userData.txt");
+        res.status(200).json(user.toString());
       }
     })
     .catch((error) => res.status(500).json(error));
@@ -128,7 +128,7 @@ exports.readUser = (req, res, next) => {
 //Modify user
 exports.updateUser = (req, res, next) => {
   User.findById(req.auth.userId)
-  // check the email of user
+    // check the email of user
     .then((user) => {
       if (!user) {
         res.status(401).json({ message: "user not found" });
@@ -139,15 +139,24 @@ exports.updateUser = (req, res, next) => {
           { ...req.body, email: encrypt(req.auth.email) },
           { new: true }
         )
-        .then((updatedUser)=>{
-          //decrypt email to be returned
-          updatedUser.email = decrypt(updatedUser.email);
-          res.status(200).json({message: "User has been updated", updatedUser})
-        })
-        .catch((error)=>res.status(400).json(error))
+          .then((updatedUser) => {
+            //decrypt email to be returned
+            updatedUser.email = decrypt(updatedUser.email);
+            res
+              .status(200)
+              .json({ message: "User has been updated", updatedUser });
+          })
+          .catch((error) => res.status(400).json(error));
       }
     })
     .catch((error) => res.status(500).json(error));
 };
 
-
+//delete account
+exports.deleteUser = (req, res, next) => {
+  User.deleteOne({ _id: req.auth.userId })
+    .then(() => {
+      res.status(204).json({ message: "User deleted" });
+    })
+    .catch((error) => ({ error }));
+};
