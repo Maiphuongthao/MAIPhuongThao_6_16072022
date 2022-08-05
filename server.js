@@ -1,15 +1,14 @@
 const express = require("express");
 const cors = require("cors");
-const mongoSanitize = require('express-mongo-sanitize');
 require("dotenv").config();
 require("./app/config/db.config");
 const app = express();
-//add helmet to help secure express modules
-const helmet = require("helmet");
 const router = require("./app/routes/index");
 //require path module to interact with file systems
 const path = require("path");
-
+const mongoSanitize = require('express-mongo-sanitize');
+//add helmet to help secure express modules
+const helmet = require("helmet");
 const slowDown = require("express-slow-down");
 
 
