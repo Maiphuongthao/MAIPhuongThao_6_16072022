@@ -1,2 +1,0 @@
-{"name":"MongoDB","hostname":"Thao","pid":52259,"level":30,"dbQuery":"db.users.createIndex({\"email\":1}, {});","msg":"","time":"2022-08-06T17:56:23.316Z","v":0}
-{"name":"MongoDB","hostname":"Thao","pid":52847,"level":30,"dbQuery":"db.users.createIndex({\"email\":1}, {});","msg":"","time":"2022-08-06T17:59:06.254Z","v":0}
