@@ -1,9 +1,12 @@
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
+const Sauce = require("../models/sauce");
 //import cryptojs for encrypt email
 const CryptoJS = require("crypto-js");
 const { json } = require("express");
+const user = require("../models/user");
+const { db } = require("../models/sauce");
 
 require("dotenv").config();
 
@@ -49,9 +52,9 @@ exports.signup = (req, res, next) => {
           newUser.email = decrypt(newUser.email);
           res.status(201).json({ message: "User created !", user: newUser });
         })
-        .catch((error) => res.status(400).json({ error }));
+        .catch((error) => res.status(400).json(error));
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => res.status(500).json(error));
 };
 
 exports.login = (req, res, next) => {
@@ -62,7 +65,6 @@ exports.login = (req, res, next) => {
       if (!user) {
         return res.status(401).json({ error: "User not found !" });
       }
-
       //decrypte email from encrypted to compare with given email by user
       user.email = decrypt(user.email);
       bcrypt
@@ -73,6 +75,10 @@ exports.login = (req, res, next) => {
               .status(401)
               .json({ error: "Your password is incorrect !" });
           }
+          const userSend = {
+            ...user.toObject(),
+            links: hateoasLinks(req, user._id),
+          };
           res.status(200).json({
             userId: user._id,
             //chiffrer un nouveau token
@@ -84,12 +90,12 @@ exports.login = (req, res, next) => {
               { expiresIn: "24h" }
             ),
             //return user as correct user
-            user: user,
+            userSend,
           });
         })
-        .catch((error) => res.status(500).json({ error }));
+        .catch((error) => res.status(500).json(error));
     })
-    .catch((error) => res.status(500).json({ error }));
+    .catch((error) => res.status(500).json(error));
 };
 
 // read user
@@ -97,12 +103,16 @@ exports.readUser = (req, res, next) => {
   // Check the user login if it's existe
   User.findById(req.auth.userId)
     .then((user) => {
+      /*const userSend = {
+        ...user.toObject(),
+        links: hateoasLinks(req, user._id),
+      };*/
       if (!user) {
         res.status(401).json({ message: "user not found" });
       } else {
         // decrypt the email to be returned
         user.email = decrypt(user.email);
-        res.status(200).json({ user });
+        res.status(200).json(user, hateoasLinks(req, user._id));
       }
     })
     .catch((error) => res.status(500).json(error));
@@ -113,13 +123,19 @@ exports.exportData = (req, res, next) => {
   // Check the user login if it's existe
   User.findById(req.auth.userId)
     .then((user) => {
+      const userSend = {
+        ...user.toObject(),
+        links: hateoasLinks(req, user._id),
+      };
+
       if (!user) {
         res.status(401).json({ message: "user not found" });
       } else {
         // decrypt the email to be returned
         user.email = decrypt(user.email);
+        const txt = user.toString();
         res.attachment("userData.txt");
-        res.status(200).json(user.toString());
+        res.status(200).json({ txt, userSend });
       }
     })
     .catch((error) => res.status(500).json(error));
@@ -129,24 +145,31 @@ exports.exportData = (req, res, next) => {
 exports.updateUser = (req, res, next) => {
   User.findById(req.auth.userId)
     // check the email of user
-    .then((user) => {
+    .then(async (user) => {
       if (!user) {
         res.status(401).json({ message: "user not found" });
       } else {
+        const update = {};
+
+        if (req.body.email) {
+          update.email = encrypt(req.body.email);
+        }
+        if (req.body.password) {
+          const hash = await bcrypt.hash(req.body.password, 10);
+          update.password = hash;
+        }
         // update user data with new info, email need to be encrypted before adding to database
-        User.findByIdAndUpdate(
-          { _id: req.auth.userId },
-          { ...req.body, email: encrypt(req.auth.email) },
-          { new: true }
-        )
+        User.findByIdAndUpdate({ _id: req.auth.userId }, update)
           .then((updatedUser) => {
+            const userSend = {
+              ...user.toObject(),
+              links: hateoasLinks(req, updatedUser._id),
+            };
             //decrypt email to be returned
             updatedUser.email = decrypt(updatedUser.email);
-            res
-              .status(200)
-              .json({ message: "User has been updated", updatedUser });
+            res.status(200).json(userSend);
           })
-          .catch((error) => res.status(400).json(error));
+          .catch((error) => console.log(error));
       }
     })
     .catch((error) => res.status(500).json(error));
@@ -154,9 +177,62 @@ exports.updateUser = (req, res, next) => {
 
 //delete account
 exports.deleteUser = (req, res, next) => {
-  User.deleteOne({ _id: req.auth.userId })
-    .then(() => {
-      res.status(204).json({ message: "User deleted" });
+  User.findById(req.auth.userId)
+    // check the email of user
+    .then((user) => {
+      if (!user) {
+        res.status(401).json({ message: "user not found" });
+      } else {
+        Sauce.remove({
+          id: {
+            $in: user._id,
+          },
+        })
+          .then(() => res.status(204).send())
+          .catch((error) => ({ error }));
+        User.deleteOne({ _id: req.auth.userId })
+          .then(() => {
+            res.status(204).send();
+          })
+          .catch((error) => ({ error }));
+      }
     })
-    .catch((error) => ({ error }));
+    .catch((error) => {
+      console.log(error);
+    });
+};
+
+const hateoasLinks = (req, id) => {
+  return [
+    {
+      href: `${req.protocol}://${req.get("host") + "/api/auth/signup"}`,
+      rel: "signup",
+      type: "POST",
+    },
+    {
+      href: `${req.protocol}://${req.get("host") + "/api/auth/login"}`,
+      rel: "login",
+      type: "POST",
+    },
+    {
+      href: `${req.protocol}://${req.get("host") + "/api/auth/"}`,
+      rel: "read",
+      type: "GET",
+    },
+    {
+      href: `${req.protocol}://${req.get("host") + "/api/auth/export"}`,
+      rel: "export",
+      type: "GET",
+    },
+    {
+      href: `${req.protocol}://${req.get("host") + "/api/auth/"}`,
+      rel: "update",
+      type: "PUT",
+    },
+    {
+      href: `${req.protocol}://${req.get("host") + "/api/auth/"}`,
+      rel: "delete",
+      type: "DELETE",
+    },
+  ];
 };
