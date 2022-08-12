@@ -5,6 +5,8 @@ const Sauce = require("../models/sauce");
 //import cryptojs for encrypt email
 const CryptoJS = require("crypto-js");
 const { json } = require("express");
+const user = require("../models/user");
+const { db } = require("../models/sauce");
 
 require("dotenv").config();
 
@@ -161,8 +163,8 @@ exports.updateUser = (req, res, next) => {
           .then((updatedUser) => {
             const userSend = {
               ...user.toObject(),
-                links:hateoasLinks(req, updatedUser._id)
-              };
+              links: hateoasLinks(req, updatedUser._id),
+            };
             //decrypt email to be returned
             updatedUser.email = decrypt(updatedUser.email);
             res.status(200).json(userSend);
@@ -181,6 +183,13 @@ exports.deleteUser = (req, res, next) => {
       if (!user) {
         res.status(401).json({ message: "user not found" });
       } else {
+        Sauce.remove({
+          id: {
+            $in: user._id,
+          },
+        })
+          .then(() => res.status(204).send())
+          .catch((error) => ({ error }));
         User.deleteOne({ _id: req.auth.userId })
           .then(() => {
             res.status(204).send();

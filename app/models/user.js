@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const uniqueValidator = require('mongoose-unique-validator');
+const sauce = require('./sauce');
 
 //Create schema of user information
 const userSchema = mongoose.Schema({
