@@ -103,16 +103,16 @@ exports.readUser = (req, res, next) => {
   // Check the user login if it's existe
   User.findById(req.auth.userId)
     .then((user) => {
-      const userSend = {
+      /*const userSend = {
         ...user.toObject(),
         links: hateoasLinks(req, user._id),
-      };
+      };*/
       if (!user) {
         res.status(401).json({ message: "user not found" });
       } else {
         // decrypt the email to be returned
         user.email = decrypt(user.email);
-        res.status(200).json(userSend);
+        res.status(200).json(user, hateoasLinks(req, user._id));
       }
     })
     .catch((error) => res.status(500).json(error));
