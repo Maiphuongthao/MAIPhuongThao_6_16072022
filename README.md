@@ -7,10 +7,15 @@ This is the back end server for Project 6 of the Web Developer path.
 
 
 Node.js, version: 16.14.0 LTS or later
+
 npm, version 8.3.1 or later
+
 nodemon, 2.0.19 or later
+
 MongoDB
+
 Postman
+
 
 
 
