@@ -25,9 +25,9 @@ exports.readAllSauces = (req, res, next) => {
         sauce.imageUrl = `${req.protocol}://${req.get("host")}${
           sauce.imageUrl
         }`;
-        return { ...sauce.toObject() }; // return to js object
+        return hateoasLinks(req, sauce, sauce._id); // return to js object
       });
-      res.status(200).json(hateoasLinks(req, sauce, sauce._id));
+      res.status(200).json(sauces);
     })
     .catch((error) => {
       res.status(400).json({
