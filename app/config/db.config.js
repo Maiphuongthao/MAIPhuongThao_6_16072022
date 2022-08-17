@@ -45,7 +45,7 @@ let log = bunyan.createLogger({
     },
     {
       type: "rotating-file",
-      path: "./log/mongodb.log",
+      path: "./logs/mongodb.log",
       period: "1d", // daily rotation
       count: 3, // keep 3 back copies
     },
