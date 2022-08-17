@@ -75,12 +75,9 @@ exports.login = (req, res, next) => {
               .status(401)
               .json({ error: "Your password is incorrect !" });
           }
-          const userSend = {
-            ...user.toObject(),
-            links: hateoasLinks(req, user._id),
-          };
+    const userSend = hateoasLinks(req, user);
+            
           res.status(200).json({
-            userId: user._id,
             //chiffrer un nouveau token
             token: jwt.sign(
               //userId entant playload
@@ -103,16 +100,12 @@ exports.readUser = (req, res, next) => {
   // Check the user login if it's existe
   User.findById(req.auth.userId)
     .then((user) => {
-      /*const userSend = {
-        ...user.toObject(),
-        links: hateoasLinks(req, user._id),
-      };*/
       if (!user) {
         res.status(401).json({ message: "user not found" });
       } else {
         // decrypt the email to be returned
         user.email = decrypt(user.email);
-        res.status(200).json(user, hateoasLinks(req, user._id));
+        res.status(200).json(hateoasLinks(req, user));
       }
     })
     .catch((error) => res.status(500).json(error));
@@ -123,11 +116,6 @@ exports.exportData = (req, res, next) => {
   // Check the user login if it's existe
   User.findById(req.auth.userId)
     .then((user) => {
-      const userSend = {
-        ...user.toObject(),
-        links: hateoasLinks(req, user._id),
-      };
-
       if (!user) {
         res.status(401).json({ message: "user not found" });
       } else {
@@ -135,7 +123,7 @@ exports.exportData = (req, res, next) => {
         user.email = decrypt(user.email);
         const txt = user.toString();
         res.attachment("userData.txt");
-        res.status(200).json({ txt, userSend });
+        res.status(200).json(txt, hateoasLinks(req, user));
       }
     })
     .catch((error) => res.status(500).json(error));
@@ -161,13 +149,9 @@ exports.updateUser = (req, res, next) => {
         // update user data with new info, email need to be encrypted before adding to database
         User.findByIdAndUpdate({ _id: req.auth.userId }, update)
           .then((updatedUser) => {
-            const userSend = {
-              ...user.toObject(),
-              links: hateoasLinks(req, updatedUser._id),
-            };
             //decrypt email to be returned
             updatedUser.email = decrypt(updatedUser.email);
-            res.status(200).json(userSend);
+            res.status(200).json(hateoasLinks(req, updatedUser));
           })
           .catch((error) => console.log(error));
       }
@@ -202,8 +186,8 @@ exports.deleteUser = (req, res, next) => {
     });
 };
 
-const hateoasLinks = (req, id) => {
-  return [
+const hateoasLinks = (req, user) => {
+  const hateoas = [
     {
       href: `${req.protocol}://${req.get("host") + "/api/auth/signup"}`,
       rel: "signup",
@@ -235,4 +219,9 @@ const hateoasLinks = (req, id) => {
       type: "DELETE",
     },
   ];
+
+  return {
+    ...user.toObject(),
+    links: hateoas
+  }
 };

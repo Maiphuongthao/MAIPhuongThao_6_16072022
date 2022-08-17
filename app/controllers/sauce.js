@@ -6,12 +6,8 @@ const fs = require("fs");
 exports.readOneSauce = (req, res, next) => {
   Sauce.findOne({ _id: req.params.id })
     .then((sauce) => {
-      const sauceSend = {
-        ...sauce.toObject(),
-        links: hateoasLinks(req, sauce._id),
-      };
       sauce.imageUrl = `${req.protocol}://${req.get("host")}${sauce.imageUrl}`;
-      res.status(200).json(sauceSend);
+      res.status(200).json(hateoasLinks(req, sauce, sauce._id));
     })
     .catch((error) => {
       res.status(404).json({
@@ -56,11 +52,7 @@ exports.createSauce = (req, res, next) => {
   sauce
     .save()
     .then((newSauce) => {
-      const sauceSend = {
-        ...newSauce._doc,
-        links: hateoasLinks(req, newSauce._id),
-      };
-      res.status(201).json(sauceSend);
+      res.status(201).json(hateoasLinks(req, newSauce, newSauce._id));
     })
     .catch((error) => {
       res.status(400).json({ error });
@@ -101,11 +93,7 @@ exports.likeAndDislike = (req, res, next) => {
               new: true,
             })
               .then((sauceUpdated) => {
-                const sauceSend = {
-                  ...sauceUpdated.toObject(),
-                  links: hateoasLinks(req, sauceUpdated._id),
-                };
-                res.status(200).json(sauceSend);
+                res.status(200).json(hateoasLinks(req, sauceUpdated, sauceUpdated._id));
               })
               .catch((error) => res.status(400).json({ error }));
           } else {
@@ -127,11 +115,7 @@ exports.likeAndDislike = (req, res, next) => {
               { new: true }
             )
               .then((updateSauce) => {
-                const sauceSend = {
-                  ...updateSauce.toObject(),
-                  links: hateoasLinks(req, updateSauce._id),
-                };
-                res.status(200).json(sauceSend)})
+                res.status(200).json(hateoasLinks(req, updateSauce, updateSauce._id))})
               .catch((error) => res.status(400).json({ error }));
           } else if (userLikedSauce) {
             Sauce.findByIdAndUpdate(
@@ -142,11 +126,7 @@ exports.likeAndDislike = (req, res, next) => {
               }
             )
               .then((updateSauce) => {
-                const sauceSend = {
-                  ...updateSauce.toObject(),
-                  links: hateoasLinks(req, updateSauce._id),
-                };
-                res.status(200).json(sauceSend)})
+                res.status(200).json(hateoasLinks(req, updateSauce, updateSauce._id))})
               .catch((error) => res.status(400).json({ error }));
           } else if (userDislikedSauce) {
             Sauce.findByIdAndUpdate(
@@ -158,11 +138,7 @@ exports.likeAndDislike = (req, res, next) => {
               { new: true }
             )
               .then((updateSauce) => {
-                const sauceSend = {
-                  ...updateSauce.toObject(),
-                  links: hateoasLinks(req, updateSauce._id),
-                };
-                res.status(200).json(sauceSend)})
+                res.status(200).json(hateoasLinks(req, updateSauce, updateSauce.id))})
               .catch((error) => res.status(400).json({ error }));
           } else {
             res.status(200).json({ message: " User never liked this sauce" });
@@ -187,11 +163,7 @@ exports.likeAndDislike = (req, res, next) => {
               new: true,
             })
               .then((updateSauce) => {
-                const sauceSend = {
-                  ...updateSauce.toObject(),
-                  links: hateoasLinks(req, updateSauce._id),
-                };
-                res.status(200).json(sauceSend)})
+                res.status(200).json(hateoasLinks(req, updateSauce, updateSauce._id))})
               .catch((error) => res.status(400).json({ error }));
           } else {
             res.status(200).json({ message: "You already Disliked the sauce" });
@@ -216,7 +188,6 @@ exports.updateSauce = (req, res, next) => {
   //get sauce id
   Sauce.findOne({ _id: req.params.id }).then((sauce) => {
     if (sauce.userId != req.auth.userId) {
-      console.log(status(400));
       res.status(403).json({ error: new Error("Unauthorized request!") });
     } else {
       //Check if image file existe or not, if yes create sauceObject with new img, if not only other info
@@ -240,13 +211,9 @@ exports.updateSauce = (req, res, next) => {
         { ...sauceObject, _id: req.params.id }
       )
         .then((updatedSauce) =>{
-          const sauceSend = {
-            ...updatedSauce.toObject(),
-            links: hateoasLinks(req, updatedSauce._id),
-          };
           res
             .status(200)
-            .json(sauceSend)
+            .json(hateoasLinks(req, updatedSauce, updatedSauce._id))
     })
         .catch((error) => {
           res.status(400).json({ error });
@@ -278,8 +245,8 @@ exports.deleteSauce = (req, res, next) => {
     });
 };
 
-const hateoasLinks = (req, id) => {
-  return [
+const hateoasLinks = (req,sauce, id) => {
+  const hateoas = [
     {
       href: `${req.protocol}://${req.get("host") + "/api/sauces/" + id}`,
       rel: "readOne",
@@ -313,4 +280,9 @@ const hateoasLinks = (req, id) => {
       type: "DELETE",
     },
   ];
+
+  return {
+    ...sauce.toObject(),
+    links: hateoas
+  }
 };
