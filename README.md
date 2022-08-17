@@ -12,9 +12,6 @@ npm, version 8.3.1 or later
 
 nodemon, 2.0.19 or later
 
-MongoDB
-
-Postman
 
 
 
