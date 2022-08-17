@@ -202,7 +202,7 @@ exports.likeAndDislike = (req, res, next) => {
 exports.updateSauce = (req, res, next) => {
   //get sauce id
   Sauce.findOne({ _id: req.params.id }).then((sauce) => {
-    if (sauce.userId != req.auth.userId) {
+    if (sauce.userId !== req.auth.userId) {
       res.status(403).json({ error: new Error("Unauthorized request!") });
     } else {
       //Check if image file existe or not, if yes create sauceObject with new img, if not only other info
