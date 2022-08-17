@@ -1,6 +1,7 @@
 const { json } = require("express");
 const Sauce = require("../models/sauce");
 const fs = require("fs");
+const { safeCycles } = require("bunyan");
 
 //Search if of sauce é get one sauce
 exports.readOneSauce = (req, res, next) => {
@@ -26,7 +27,7 @@ exports.readAllSauces = (req, res, next) => {
         }`;
         return { ...sauce.toObject() }; // return to js object
       });
-      res.status(200).json(sauces);
+      res.status(200).json(hateoasLinks(req, sauce, sauce._id));
     })
     .catch((error) => {
       res.status(400).json({
