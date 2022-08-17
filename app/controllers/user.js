@@ -75,8 +75,8 @@ exports.login = (req, res, next) => {
               .status(401)
               .json({ error: "Your password is incorrect !" });
           }
-    const userSend = hateoasLinks(req, user);
-            
+          const userSend = hateoasLinks(req, user);
+
           res.status(200).json({
             //chiffrer un nouveau token
             token: jwt.sign(
@@ -222,6 +222,6 @@ const hateoasLinks = (req, user) => {
 
   return {
     ...user.toObject(),
-    links: hateoas
-  }
+    links: hateoas,
+  };
 };
