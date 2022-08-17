@@ -123,7 +123,7 @@ exports.exportData = (req, res, next) => {
         user.email = decrypt(user.email);
         const txt = user.toString();
         res.attachment("userData.txt");
-        res.status(200).json(txt, hateoasLinks(req, user));
+        res.status(200).json(hateoasLinks(req, user));
       }
     })
     .catch((error) => res.status(500).json(error));

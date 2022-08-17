@@ -1,6 +1,7 @@
 const { json } = require("express");
 const Sauce = require("../models/sauce");
 const fs = require("fs");
+const { safeCycles } = require("bunyan");
 
 //Search if of sauce é get one sauce
 exports.readOneSauce = (req, res, next) => {
@@ -24,7 +25,7 @@ exports.readAllSauces = (req, res, next) => {
         sauce.imageUrl = `${req.protocol}://${req.get("host")}${
           sauce.imageUrl
         }`;
-        return { ...sauce.toObject() }; // return to js object
+        return hateoasLinks(req, sauce, sauce._id); // return to js object
       });
       res.status(200).json(sauces);
     })
@@ -201,7 +202,7 @@ exports.likeAndDislike = (req, res, next) => {
 exports.updateSauce = (req, res, next) => {
   //get sauce id
   Sauce.findOne({ _id: req.params.id }).then((sauce) => {
-    if (sauce.userId != req.auth.userId) {
+    if (sauce.userId !== req.auth.userId) {
       res.status(403).json({ error: new Error("Unauthorized request!") });
     } else {
       //Check if image file existe or not, if yes create sauceObject with new img, if not only other info
