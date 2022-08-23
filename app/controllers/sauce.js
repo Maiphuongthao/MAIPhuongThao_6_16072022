@@ -1,7 +1,5 @@
-const { json } = require("express");
 const Sauce = require("../models/sauce");
 const fs = require("fs");
-const { safeCycles } = require("bunyan");
 
 //Search if of sauce é get one sauce
 exports.readOneSauce = (req, res, next) => {
@@ -201,7 +199,7 @@ exports.likeAndDislike = (req, res, next) => {
 //update Sauce
 exports.updateSauce = (req, res, next) => {
   //get sauce id
-  Sauce.findOne({ _id: req.params.id }).then((sauce) => {
+  Sauce.findById(req.params.id).then((sauce) => {
     if (sauce.userId !== req.auth.userId) {
       res.status(403).json({ error: new Error("Unauthorized request!") });
     } else {
@@ -216,14 +214,15 @@ exports.updateSauce = (req, res, next) => {
       const filename = sauce.imageUrl.split("/images/")[1];
       try {
         if (sauceObject.imageUrl) {
-          fs.unlink(`images/${filename}`);
+          fs.unlinkSync(`images/${filename}`);
         }
       } catch (error) {
         console.error(error);
       }
       Sauce.findByIdAndUpdate(
-        //{ _id: req.params.id },
-        { ...sauceObject, _id: req.params.id }
+        { _id: req.params.id },
+        { ...sauceObject, _id: req.params.id },
+        { new: true }
       )
         .then((updatedSauce) => {
           res
