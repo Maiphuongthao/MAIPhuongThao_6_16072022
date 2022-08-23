@@ -4,9 +4,6 @@ const User = require("../models/user");
 const Sauce = require("../models/sauce");
 //import cryptojs for encrypt email
 const CryptoJS = require("crypto-js");
-const { json } = require("express");
-const user = require("../models/user");
-const { db } = require("../models/sauce");
 
 require("dotenv").config();
 
