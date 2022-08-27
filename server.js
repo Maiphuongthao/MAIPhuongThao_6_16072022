@@ -10,6 +10,7 @@ const mongoSanitize = require('express-mongo-sanitize');
 //add helmet to help secure express modules
 const helmet = require("helmet");
 const slowDown = require("express-slow-down");
+const hateoasLinker = require('express-hateoas-links');
 
 
 
@@ -33,7 +34,9 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 app.use(express.json());
+app.use(hateoasLinker);
 app.use(express.urlencoded({ extended: true }));
+
 
 app.use("/api", router);
 //Mangae images as static eachtime its running after /images

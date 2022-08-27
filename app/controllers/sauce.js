@@ -195,11 +195,13 @@ exports.likeAndDislike = (req, res, next) => {
       })
     );
 };
-
+//console.log('update');
 //update Sauce
 exports.updateSauce = (req, res, next) => {
   //get sauce id
-  Sauce.findById(req.params.id).then((sauce) => {
+  Sauce.findById({ _id: req.params.id })
+  .then((sauce) => {
+    //console.log('update' + userId);
     if (sauce.userId !== req.auth.userId) {
       res.status(403).json({ error: new Error("Unauthorized request!") });
     } else {
@@ -219,11 +221,13 @@ exports.updateSauce = (req, res, next) => {
       } catch (error) {
         console.error(error);
       }
+
       Sauce.findByIdAndUpdate(
         { _id: req.params.id },
         { ...sauceObject, _id: req.params.id },
         { new: true }
       )
+
         .then((updatedSauce) => {
           res
             .status(200)

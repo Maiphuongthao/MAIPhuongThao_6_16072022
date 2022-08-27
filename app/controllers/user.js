@@ -75,6 +75,7 @@ exports.login = (req, res, next) => {
           const userSend = hateoasLinks(req, user);
 
           res.status(200).json({
+            userId: user._id,
             //chiffrer un nouveau token
             token: jwt.sign(
               //userId entant playload
@@ -84,7 +85,8 @@ exports.login = (req, res, next) => {
               { expiresIn: "24h" }
             ),
             //return user as correct user
-            userSend,
+            userSend
+            
           });
         })
         .catch((error) => res.status(500).json(error));
